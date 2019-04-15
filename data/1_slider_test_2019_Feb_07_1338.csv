@@ -1,0 +1,5 @@
+﻿emotion,trials.thisRepN,trials.thisTrialN,trials.thisN,trials.thisIndex,participant,session,date,expName,psychopyVersion,frameRate,
+Grumpy,0,0,0,0,1,001,2019_Feb_07_1338,slider_test,3.0.3,59.993915034167244,
+Happy,0,1,1,2,1,001,2019_Feb_07_1338,slider_test,3.0.3,59.993915034167244,
+Doc,0,2,2,3,1,001,2019_Feb_07_1338,slider_test,3.0.3,59.993915034167244,
+Sleepy,0,3,3,1,1,001,2019_Feb_07_1338,slider_test,3.0.3,59.993915034167244,

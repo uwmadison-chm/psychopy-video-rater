@@ -1,0 +1,6 @@
+﻿emotion,trials.thisRepN,trials.thisTrialN,trials.thisN,trials.thisIndex,instructions_resp.keys,instructions_resp.rt,participant,session,date,expName,psychopyVersion,frameRate,
+,,,,,space,1.8115617809817195,1,001,2019_Feb_07_1343,slider_test,3.0.3,60.114035247695575,
+Happy,0,0,0,2,,,1,001,2019_Feb_07_1343,slider_test,3.0.3,60.114035247695575,
+Doc,0,1,1,3,,,1,001,2019_Feb_07_1343,slider_test,3.0.3,60.114035247695575,
+Grumpy,0,2,2,0,,,1,001,2019_Feb_07_1343,slider_test,3.0.3,60.114035247695575,
+Sleepy,0,3,3,1,,,1,001,2019_Feb_07_1343,slider_test,3.0.3,60.114035247695575,
