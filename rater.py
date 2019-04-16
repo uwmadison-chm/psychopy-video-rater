@@ -13,7 +13,7 @@ Requires:
         http://www.lfd.uci.edu/~gohlke/pythonlibs/ # opencv
 """
 
-from __future__ import division
+from __future__ import absolute_import, division
 
 from psychopy import visual, core, event, data, logging
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
@@ -34,10 +34,10 @@ expInfo['psychopyVersion'] = psychopyVersion
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
 
 # An ExperimentHandler isn't essential but helps with data saving
-thisExp = data.ExperimentHandler(name=expName, version='',
+exp = data.ExperimentHandler(name=expName, version='',
     extraInfo=expInfo, runtimeInfo=None,
-    originPath=_thisDir + '/video_rater.py',
-    savePickle=True, saveWideText=True,
+    originPath=_thisDir + '/rater.py',
+    savePickle=False, saveWideText=True,
     dataFileName=filename)
 # save a log file for detail verbose info
 logFile = logging.LogFile(filename+'.log', level=logging.EXP)
@@ -96,7 +96,6 @@ getready = visual.TextStim(win=win, name='getready',
 
 
 # Initialize components for Routine "trial"
-trialClock = core.Clock()
 prompt_text = visual.TextStim(win=win, name='prompt_text',
     text='How did this person feel while talking?',
     font='Arial',
@@ -156,6 +155,7 @@ def displayText(text, timeLimit=0, mouseClickNext=False):
             thisComponent.status = NOT_STARTED
 
     endExpNow = False
+    mouse.setPos([0, 0])
     mouse.clickReset()
 
     # -------Start display-------
@@ -247,6 +247,11 @@ displayText(getready, 2.0)
 
 
 # ------Prepare to start Routine "trial"-------
+trialClock = core.Clock()
+newtime = trialClock.getTime()
+oldtime = newtime
+rate = 0.005
+
 shouldflip = mov.play()
 mouse.getPos()
 
@@ -276,7 +281,15 @@ while mov.status != visual.FINISHED and continueRoutine:
 
     indicator.pos = (newx, oldy)
 
-    # TODO: Save position data
+    newtime = trialClock.getTime()
+    if newtime - oldtime >= rate:
+        # Save mouse position data
+        exp.addData('clock', newtime)
+        exp.addData('frame', mov.getCurrentFrameNumber())
+        # Regularize to -1.0, 1.0
+        exp.addData('mouse', newx / right_bound)
+        exp.nextEntry()
+    oldtime = newtime
 
     # Only flip when a new frame should be displayed.
     if shouldflip:
@@ -298,15 +311,7 @@ while mov.status != visual.FINISHED and continueRoutine:
 # ------Prepare to start Routine "thanks"-------
 displayText(thanks_text, mouseClickNext=True)
 
-
-# these shouldn't be strictly necessary (should auto-save)
-thisExp.saveAsWideText(filename+'.csv')
-thisExp.saveAsPickle(filename)
-
 logging.flush()
-
-# make sure everything is closed down
-thisExp.abort()  # or data files will save again on exit
 
 win.close()
 core.quit()
