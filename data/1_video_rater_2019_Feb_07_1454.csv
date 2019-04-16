@@ -1,7 +1,0 @@
-﻿moviefile,trials.thisRepN,trials.thisTrialN,trials.thisN,trials.thisIndex,instructions_resp.keys,instructions_resp.rt,thanks_resp.keys,thanks_resp.rt,participant,session,date,expName,psychopyVersion,frameRate,
-,,,,,space,1.2430161549709737,,,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
-negative-example1.mp4,0,0,0,0,,,,,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
-positive-example1.mp4,0,1,1,1,,,,,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
-positive-example2.mp4,0,2,2,3,,,,,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
-negative-example2.mp4,0,3,3,2,,,,,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
-,,,,,,,space,3.975695876055397,1,001,2019_Feb_07_1454,video_rater,3.0.3,59.77456632110272,
