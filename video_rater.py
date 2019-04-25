@@ -138,7 +138,7 @@ thanksClock = core.Clock()
 thanks_text = visual.TextStim(win=win, name='thanks_text',
     text='Thank you for participating!\n\nPlease let the experimenter know you are done.',
     font='Arial',
-    pos=(0, 0), height=0.2, wrapWidth=None, ori=0, 
+    pos=(0, 0), height=0.08, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
@@ -333,7 +333,7 @@ while mov.status != visual.FINISHED and continueRoutine:
             core.quit()
 
 # ------Prepare to start Routine "thanks"-------
-displayText(thanks_text, mouseClickNext=True)
+displayText(thanks_text, mouseClickNext=False)
 
 logging.flush()
 
