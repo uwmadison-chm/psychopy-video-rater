@@ -7,10 +7,6 @@ Using the new (beta) MovieStim2 to play a video file.
 Requires: 
   * vlc, matching your python bitness
   * pip install python-vlc
-  * pip install opencv
-  * opencv itself
-    * For Windows, a binary installer is available at
-        http://www.lfd.uci.edu/~gohlke/pythonlibs/ # opencv
 """
 
 from __future__ import absolute_import, division
