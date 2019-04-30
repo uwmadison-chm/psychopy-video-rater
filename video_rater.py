@@ -22,6 +22,7 @@ if not os.path.exists(videopath):
 
 videos = glob.glob(videopath + '\*.mp4')
 videopath = max(videos, key=os.path.getctime)
+videopath = r'C:\My Experiments\AFCHRON\biopac_data\huge.mp4'
 
 _thisDir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(_thisDir)
@@ -51,7 +52,8 @@ logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a f
 
 
 win = visual.Window(
-    size=[1440, 900], fullscr=True, screen=1,
+    screen=1,
+    fullscr=True,
     allowGUI=False, allowStencil=False,
     monitor='testMonitor', color=[-1,-1,-1], colorSpace='rgb',
     blendMode='avg', useFBO=True,
@@ -66,7 +68,7 @@ else:
 
 
 # Initialize components for "experimenter"
-mov = visual.MovieStim2(win, videopath,
+mov = visual.VlcMovieStim(win, videopath,
     units=None,
     pos=(0, 0.15),
     loop=False)
@@ -74,7 +76,7 @@ mov = visual.MovieStim2(win, videopath,
 mov.size = (1.0, .5625)
 
 
-experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video,\nand turn the monitor to face the participant.\nPress 'q' to start over.", pos=(0, -450), units = 'pix')
+experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video, and turn the monitor to face the participant.\nPress 'q' to start over.", pos=(0, -0.2), height=0.02)
 
 
 # Initialize components for Routine "instructions"
@@ -145,6 +147,30 @@ thanks_text = visual.TextStim(win=win, name='thanks_text',
 globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.CountdownTimer()  # to track time remaining of each (non-slip) routine 
 
+
+def moveIndicator():
+    x, y = mouse.getPos()
+    oldx, oldy = indicator.pos
+    newx = x
+    constrainMouse = False
+
+    # constrain mouse position so that user can't move to the other screen accidentally
+    if newx < left_bound:
+        newx = left_bound
+        constrainMouse = True
+    if newx > right_bound:
+        newx = right_bound
+        constrainMouse = True
+    if abs(y - oldy) > 0.1:
+        constrainMouse = True
+    if constrainMouse:
+        mouse.setPos([newx, oldy])
+
+    indicator.pos = (newx, oldy)
+    indicator.draw()
+    return newx
+
+
 def displayText(text, timeLimit=0, mouseClickNext=False, showScale=False):
     t = 0
     continueRoutine = True
@@ -168,24 +194,8 @@ def displayText(text, timeLimit=0, mouseClickNext=False, showScale=False):
     while continueRoutine and (not timeLimit or (timeLimit and routineTimer.getTime() > 0)):
         # update/draw components on each frame
         if showScale:
-            x, y = mouse.getPos()
-            oldx, oldy = indicator.pos
-            newx = x
-
-            # constrain mouse position so that user can't move to the other screen accidentally
-            if newx < left_bound:
-                newx = left_bound
-                constrainMouse = True
-            if newx > right_bound:
-                newx = right_bound
-                constrainMouse = True
-            if abs(y - oldy) > 0.2:
-                constrainMouse = True
-            if constrainMouse:
-                mouse.setPos([newx, oldy])
-
-            indicator.pos = (newx, oldy)
             scale.draw()
+            moveIndicator()
             indicator.draw()
 
         if t >= 0.0 and text.status == NOT_STARTED:
@@ -262,15 +272,12 @@ mov.pause()
 mov.seek(0)
 
 
-# ------Prepare to start Routine "instructions"-------
+# INSTRUCTIONS
 displayText(instructions_text, mouseClickNext=True, showScale=True)
 
 
-# ------Prepare to start Routine "iti"-------
-#displayText(getready, 4.0)
 
 
-# ------Prepare to start Routine "trial"-------
 trialClock = core.Clock()
 newtime = trialClock.getTime()
 oldtime = newtime
@@ -281,25 +288,10 @@ indicator.pos = (0, oldy)
 
 shouldflip = mov.play()
 continueRoutine = True
-constrainMouse = False
+
+# MAIN TRIAL
 while mov.status != visual.FINISHED and continueRoutine:
-    x, y = mouse.getPos()
-    oldx, oldy = indicator.pos
-    newx = x
-
-    # constrain mouse position so that user can't move to the other screen accidentally
-    if newx < left_bound:
-        newx = left_bound
-        constrainMouse = True
-    if newx > right_bound:
-        newx = right_bound
-        constrainMouse = True
-    if abs(y - oldy) > 0.2:
-        constrainMouse = True
-    if constrainMouse:
-        mouse.setPos([newx, oldy])
-
-    indicator.pos = (newx, oldy)
+    newx = moveIndicator()
 
     newtime = trialClock.getTime()
     if newtime - oldtime >= rate:
