@@ -46,6 +46,10 @@ CorrectVideoUnlockCb = ctypes.CFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p, ctypes
 
 @CorrectVideoLockCb
 def _vlcLockCallback(user_data, planes):
+    logging.warning("Locking")
+    bork = ctypes.cast(user_data, ctypes.POINTER(ctypes.py_object)).contents.value
+    bork.add_blorp()
+    logging.warning("Got bork: %s" % bork.blorps)
     pixel_lock.acquire()
     # Tell VLC to take the data and stuff it into the buffer
     planes[0] = ctypes.cast(pixel_buffer, ctypes.c_void_p)
@@ -59,22 +63,22 @@ def _vlcDisplayCallback(user_data, picture):
     global frame_counter
     frame_counter += 1
 
-def vlcTimeCallback(event, ref, player):
-    # Called by VLC every few hundred msec providing the current time.
-    return
 
-def vlcEndCallback(event, ref):
-    logging.warning("Got end of movie callback")
+class Bork:
+    def __init__(self, blorps):
+        self.blorps = blorps
 
+    def blorps(self):
+        return self.blorps
+
+    def add_blorp(self):
+        self.blorps += 1
+
+bork = Bork(1)
 
 # Once you set these callbacks, you are in complete control of what to do with the video buffer
-player.video_set_callbacks(_vlcLockCallback, _vlcUnlockCallback, _vlcDisplayCallback, None)
-
-# The other callbacks go on the player's event manager
-em = player.event_manager()
-em.event_attach(vlc.EventType.MediaPlayerTimeChanged, vlcTimeCallback, None, player)
-em.event_attach(vlc.EventType.MediaPlayerEndReached, vlcEndCallback, None)
-
+woo = ctypes.cast(ctypes.pointer(ctypes.py_object(bork)), ctypes.c_void_p)
+player.video_set_callbacks(_vlcLockCallback, _vlcUnlockCallback, _vlcDisplayCallback, woo)
 
 
 def bindTexture(pixel_buffer, texture_id):

@@ -30,7 +30,7 @@ win = visual.Window(
 
 experimenter_text = visual.TextStim(win, "IT'S A MOVIE", pos=(0, -450), units = 'pix')
 
-mov = visual.MovieStim4(win, videopath,
+mov = visual.VlcMovieStim(win, videopath,
     units=None,
     pos=(0, 0.15),
     loop=False)
@@ -48,7 +48,7 @@ while continueRoutine:
         win.flip()
     else:
         # Give the OS a break if a flip is not needed
-        time.sleep(0.01)
+        time.sleep(0.001)
     shouldflip = mov.draw()
 
     for key in event.getKeys():
