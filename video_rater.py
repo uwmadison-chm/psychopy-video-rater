@@ -14,7 +14,7 @@ from __future__ import absolute_import, division
 from psychopy import visual, core, event, data, logging, monitors
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-import time, os, sys, glob
+import time, os, sys, glob, csv
 
 videopath = r'C:\My Experiments\AFCHRON\biopac_data'
 if not os.path.exists(videopath):
@@ -29,7 +29,8 @@ os.chdir(_thisDir)
 
 psychopyVersion = '3.0.3'
 expName = 'video_rater'
-expInfo = {'participant': '', 'session': '001'}
+expInfo = {}
+expInfo['participant'] = "3000"
 expInfo['date'] = data.getDateStr()  # add a simple timestamp
 expInfo['expName'] = expName
 expInfo['psychopyVersion'] = psychopyVersion
@@ -37,18 +38,9 @@ expInfo['psychopyVersion'] = psychopyVersion
 # Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
 filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
 
-# An ExperimentHandler isn't essential but helps with data saving
-exp = data.ExperimentHandler(name=expName, version='',
-    extraInfo=expInfo, runtimeInfo=None,
-    originPath=_thisDir + '/rater.py',
-    savePickle=False, saveWideText=True,
-    dataFileName=filename)
 # save a log file for detail verbose info
 logFile = logging.LogFile(filename+'.log', level=logging.EXP)
 logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
-
-# Start Code - component code to be run before the window creation
-
 
 
 win = visual.Window(
@@ -59,27 +51,17 @@ win = visual.Window(
     blendMode='avg', useFBO=True,
     units='height')
 
-# store frame rate of monitor if we can measure it
-expInfo['frameRate'] = win.getActualFrameRate()
-if expInfo['frameRate'] != None:
-    frameDur = 1.0 / round(expInfo['frameRate'])
-else:
-    frameDur = 1.0 / 60.0  # could not measure, so guess
 
-
-# Initialize components for "experimenter"
 mov = visual.VlcMovieStim(win, videopath,
     units=None,
     pos=(0, 0.15),
+    size=(1.0, .5625),
     loop=False)
-
-mov.size = (1.0, .5625)
 
 
 experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video, and turn the monitor to face the participant.\nPress 'q' to start over.", pos=(0, -0.2), height=0.02)
 
 
-# Initialize components for Routine "instructions"
 instructions_text = visual.TextStim(win=win, name='instructions_text',
     text='You will see a video of the test.\n\nYou will use the trackball to rate how stressed you were feeling at each point in the video.\n\nTry moving the trackball now.\n\nClick a trackball button when ready to continue.',
     font='Arial',
@@ -89,7 +71,6 @@ instructions_text = visual.TextStim(win=win, name='instructions_text',
     depth=0.0);
 
 
-# Initialize components for Routine "iti"
 getready = visual.TextStim(win=win, name='getready',
     text='+',
     font='Arial',
@@ -99,7 +80,6 @@ getready = visual.TextStim(win=win, name='getready',
     depth=0.0);
 
 
-# Initialize components for Routine "trial"
 prompt_text = visual.TextStim(win=win, name='prompt_text',
     text='How stressed were you feeling at this time?',
     font='Arial',
@@ -131,7 +111,6 @@ right_bound = 0.85
 oldx, oldy = indicator.pos
 indicator.pos = (0, oldy)
 
-# Initialize components for Routine "thanks"
 thanksClock = core.Clock()
 thanks_text = visual.TextStim(win=win, name='thanks_text',
     text='Thank you for participating!\n\nPlease let the experimenter know you are done.',
@@ -142,9 +121,6 @@ thanks_text = visual.TextStim(win=win, name='thanks_text',
     depth=0.0);
 
 
-
-# Create some handy timers
-globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.CountdownTimer()  # to track time remaining of each (non-slip) routine 
 
 
@@ -268,58 +244,63 @@ while continueRoutine:
             continueRoutine = False
 
 mov.pause()
-# Reload the movie from the start
-mov.seek(0)
 
 
 # INSTRUCTIONS
 displayText(instructions_text, mouseClickNext=True, showScale=True)
 
 
-
-
-trialClock = core.Clock()
-newtime = trialClock.getTime()
-oldtime = newtime
 rate = 0.005
 
 oldx, oldy = indicator.pos
 indicator.pos = (0, oldy)
 
+trialClock = core.Clock()
+oldtime = 0.0
+
+# Reload the movie from the start
+mov.seek(0)
+# Yes, this is ugly, but force the vlc clock to reset
+mov._vlc_clock.reset()
 shouldflip = mov.play()
 continueRoutine = True
 
-# MAIN TRIAL
-while mov.status != visual.FINISHED and continueRoutine:
-    newx = moveIndicator()
+with open(filename+'.tsv', 'w', newline='') as csvfile:
+    output = csv.writer(csvfile, delimiter="\t")
+    output.writerow(['id', 'clock', 'vlc_time', 'frame_number', 'mouse'])
 
-    newtime = trialClock.getTime()
-    if newtime - oldtime >= rate:
-        # Save mouse position data
-        exp.addData('clock', newtime)
-        exp.addData('frame', mov.getCurrentFrameNumber())
-        exp.addData('time', mov.getCurrentFrameTime())
-        # Regularize to -1.0, 1.0
-        exp.addData('mouse', newx / right_bound)
-        exp.nextEntry()
-    oldtime = newtime
+    # MAIN TRIAL
+    while mov.status != visual.FINISHED and continueRoutine:
+        newx = moveIndicator()
 
-    # Only flip when a new frame should be displayed.
-    if shouldflip:
-        # Movie has already been drawn, so just draw text stim and flip
-        scale.draw()
-        prompt_text.draw()
-        indicator.draw()
-        win.flip()
-    else:
-        # Give the OS a break if a flip is not needed
-        time.sleep(0.001)
-    shouldflip = mov.draw()
+        newtime = trialClock.getTime()
+        if newtime - oldtime >= rate:
+            # Save mouse position data
+            output.writerow(
+                [expInfo['participant'],
+                newtime,
+                mov.getCurrentFrameTime(),
+                mov.getCurrentFrameNumber(),
+                newx / right_bound # Regularize to -1.0, 1.0
+                ])
+        oldtime = newtime
 
-    for key in event.getKeys():
-        if key in ['escape', 'q']:
-            win.close()
-            core.quit()
+        # Only flip when a new frame should be displayed.
+        if shouldflip:
+            # Movie has already been drawn, so just draw text stim and flip
+            scale.draw()
+            prompt_text.draw()
+            indicator.draw()
+            win.flip()
+        else:
+            # Give the OS a break if a flip is not needed
+            time.sleep(0.001)
+        shouldflip = mov.draw()
+
+        for key in event.getKeys():
+            if key in ['escape', 'q']:
+                win.close()
+                core.quit()
 
 # ------Prepare to start Routine "thanks"-------
 displayText(thanks_text, mouseClickNext=False)
