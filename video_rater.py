@@ -298,6 +298,7 @@ while mov.status != visual.FINISHED and continueRoutine:
         # Save mouse position data
         exp.addData('clock', newtime)
         exp.addData('frame', mov.getCurrentFrameNumber())
+        exp.addData('time', mov.getCurrentFrameTime())
         # Regularize to -1.0, 1.0
         exp.addData('mouse', newx / right_bound)
         exp.nextEntry()
