@@ -16,17 +16,21 @@ from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
 import time, os, sys, glob, csv, re
 
+
 video_folder = r'C:\My Experiments\AFCHRON\biopac_data'
 if not os.path.exists(video_folder):
     raise RuntimeError("Video folder could not be found: " + video_folder)
 
-videos = glob.glob(video_folder + '\*.mp4')
-video = max(videos, key=os.path.getctime)
+if len(sys.argv) > 1:
+	video = sys.argv[1]
+else:
+	videos = glob.glob(video_folder + '\*.mp4')
+	video = max(videos, key=os.path.getctime)
 
 _thisDir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(_thisDir)
 
-psychopyVersion = '3.0.3'
+psychopyVersion = '3.0.6'
 expName = 'video_rater'
 expInfo = {}
 expInfo['date'] = data.getDateStr()  # add a simple timestamp
