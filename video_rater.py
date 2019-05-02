@@ -14,15 +14,14 @@ from __future__ import absolute_import, division
 from psychopy import visual, core, event, data, logging, monitors
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-import time, os, sys, glob, csv
+import time, os, sys, glob, csv, re
 
-videopath = r'C:\My Experiments\AFCHRON\biopac_data'
-if not os.path.exists(videopath):
-    raise RuntimeError("Video path could not be found: " + videopath)
+video_folder = r'C:\My Experiments\AFCHRON\biopac_data'
+if not os.path.exists(video_folder):
+    raise RuntimeError("Video folder could not be found: " + video_folder)
 
-videos = glob.glob(videopath + '\*.mp4')
-videopath = max(videos, key=os.path.getctime)
-videopath = r'C:\My Experiments\AFCHRON\biopac_data\huge.mp4'
+videos = glob.glob(video_folder + '\*.mp4')
+video = max(videos, key=os.path.getctime)
 
 _thisDir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(_thisDir)
@@ -30,17 +29,10 @@ os.chdir(_thisDir)
 psychopyVersion = '3.0.3'
 expName = 'video_rater'
 expInfo = {}
-expInfo['participant'] = "3000"
 expInfo['date'] = data.getDateStr()  # add a simple timestamp
 expInfo['expName'] = expName
 expInfo['psychopyVersion'] = psychopyVersion
 
-# Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
-filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
-
-# save a log file for detail verbose info
-logFile = logging.LogFile(filename+'.log', level=logging.EXP)
-logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
 
 
 win = visual.Window(
@@ -52,14 +44,29 @@ win = visual.Window(
     units='height')
 
 
-mov = visual.VlcMovieStim(win, videopath,
+mov = visual.VlcMovieStim(win, video,
     units=None,
     pos=(0, 0.15),
     size=(1.0, .5625),
     loop=False)
 
 
-experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video, and turn the monitor to face the participant.\nPress 'q' to start over.", pos=(0, -0.2), height=0.02)
+match = re.search("afc_(\d+)", video)
+if match:
+    expInfo['participant'] = match.group(1)
+    experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video and participant is number %s.\n\nThen, turn the monitor to face the participant.\n\nIf this is incorrect, press 'q' or 'Esc' to start over and check %s for correct video." % (expInfo['participant'], video_folder), pos=(0, -0.2), height=0.02)
+else:
+    expInfo['participant'] = "UNKNOWN"
+    experimenter_text = visual.TextStim(win, "WARNING: No participant id found in latest video %s.\n\nPress 'q' or 'Esc' and check in folder %s for video." % (video, video_folder), pos=(0, -0.2), height=0.02)
+
+
+# Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
+filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+
+# save a log file for detail verbose info
+logFile = logging.LogFile(filename+'.log', level=logging.EXP)
+logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
+
 
 
 instructions_text = visual.TextStim(win=win, name='instructions_text',
