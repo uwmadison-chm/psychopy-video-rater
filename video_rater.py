@@ -74,7 +74,7 @@ logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a f
 
 
 instructions_text = visual.TextStim(win=win, name='instructions_text',
-    text='You will see a video of the test.\n\nYou will use the trackball to rate how stressed you were feeling at each point in the video.\n\nTry moving the trackball now.\n\nClick a trackball button when ready to continue.',
+    text='You will see a video of the test.\n\nYou will use the trackball to rate how stressed you were feeling at each point in the video.\n\nTry moving the trackball now.\n\nTell the experimenter when you are ready to continue.',
     font='Arial',
     pos=(0, 0.15), height=0.04, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
@@ -124,9 +124,9 @@ indicator.pos = (0, oldy)
 
 thanksClock = core.Clock()
 thanks_text = visual.TextStim(win=win, name='thanks_text',
-    text='Thank you for participating!\n\nPlease let the experimenter know you are done.',
+    text='Thank you for your participation!\n\nYou have finished the task. Please retrieve the experimenter from the hallway.',
     font='Arial',
-    pos=(0, 0), height=0.08, wrapWidth=None, ori=0, 
+    pos=(0, 0), height=0.08, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
@@ -258,7 +258,7 @@ mov.pause()
 
 
 # INSTRUCTIONS
-displayText(instructions_text, mouseClickNext=True, showScale=True)
+displayText(instructions_text, mouseClickNext=False, showScale=True)
 
 
 rate = 0.005
@@ -269,7 +269,7 @@ indicator.pos = (0, oldy)
 trialClock = core.Clock()
 oldtime = 0.0
 
-# Reload the movie from the start
+# Jump into the movie
 mov.seek(0)
 # Yes, this is ugly, but force the vlc clock to reset
 mov._vlc_clock.reset()
@@ -310,8 +310,10 @@ with open(filename+'.tsv', 'w', newline='') as csvfile:
 
         for key in event.getKeys():
             if key in ['escape', 'q']:
-                win.close()
-                core.quit()
+                continueRoutine = False
+
+
+mov.pause()
 
 # ------Prepare to start Routine "thanks"-------
 displayText(thanks_text, mouseClickNext=False)
