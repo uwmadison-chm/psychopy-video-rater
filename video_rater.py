@@ -7,85 +7,81 @@ Using the new (beta) MovieStim2 to play a video file.
 Requires: 
   * vlc, matching your python bitness
   * pip install python-vlc
-  * pip install opencv
-  * opencv itself
-    * For Windows, a binary installer is available at
-        http://www.lfd.uci.edu/~gohlke/pythonlibs/ # opencv
 """
 
 from __future__ import absolute_import, division
 
-from psychopy import visual, core, event, data, logging
+from psychopy import visual, core, event, data, logging, monitors
 from psychopy.constants import (NOT_STARTED, STARTED, PLAYING, PAUSED,
                                 STOPPED, FINISHED, PRESSED, RELEASED, FOREVER)
-import time, os, sys
+import time, os, sys, glob, csv, re
+
+
+video_folder = r'C:\My Experiments\AFCHRON\biopac_data'
+if not os.path.exists(video_folder):
+    raise RuntimeError("Video folder could not be found: " + video_folder)
+
+if len(sys.argv) > 1:
+	video = sys.argv[1]
+else:
+	videos = glob.glob(video_folder + '\*.mp4')
+	video = max(videos, key=os.path.getctime)
 
 _thisDir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(_thisDir)
 
-psychopyVersion = '3.0.3'
+psychopyVersion = '3.0.6'
 expName = 'video_rater'
-expInfo = {'participant': '', 'session': '001'}
+expInfo = {}
 expInfo['date'] = data.getDateStr()  # add a simple timestamp
 expInfo['expName'] = expName
 expInfo['psychopyVersion'] = psychopyVersion
 
-# Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
-filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
 
-# An ExperimentHandler isn't essential but helps with data saving
-exp = data.ExperimentHandler(name=expName, version='',
-    extraInfo=expInfo, runtimeInfo=None,
-    originPath=_thisDir + '/rater.py',
-    savePickle=False, saveWideText=True,
-    dataFileName=filename)
-# save a log file for detail verbose info
-logFile = logging.LogFile(filename+'.log', level=logging.EXP)
-logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
-
-# Start Code - component code to be run before the window creation
-
-videopath = r'c:\users\fitch\downloads\huge.mp4'
-if not os.path.exists(videopath):
-    raise RuntimeError("Video File could not be found:" + videopath)
 
 win = visual.Window(
-    size=[1440, 900], fullscr=True, screen=0,
+    screen=1,
+    fullscr=True,
     allowGUI=False, allowStencil=False,
     monitor='testMonitor', color=[-1,-1,-1], colorSpace='rgb',
     blendMode='avg', useFBO=True,
     units='height')
 
-# store frame rate of monitor if we can measure it
-expInfo['frameRate'] = win.getActualFrameRate()
-if expInfo['frameRate'] != None:
-    frameDur = 1.0 / round(expInfo['frameRate'])
-else:
-    frameDur = 1.0 / 60.0  # could not measure, so guess
 
-
-# Initialize components for "experimenter"
-mov = visual.MovieStim2(win, videopath,
-    # pos specifies the /center/ of the movie stim location
-    pos=[0, 100],
+mov = visual.VlcMovieStim(win, video,
+    units=None,
+    pos=(0, 0.15),
+    size=(1.0, .5625),
     loop=False)
 
-mov.size = (800, 600)
 
-experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video,\nand turn the monitor to face the participant.\nPress 'q' to start over.", pos=(0, -250), units = 'pix')
+match = re.search("afc_(\d+)", video)
+if match:
+    expInfo['participant'] = match.group(1)
+    experimenter_text = visual.TextStim(win, "Press 'space' if this is the correct video and participant is number %s.\n\nThen, turn the monitor to face the participant.\n\nIf this is incorrect, press 'q' or 'Esc' to start over and check %s for correct video." % (expInfo['participant'], video_folder), pos=(0, -0.2), height=0.02)
+else:
+    expInfo['participant'] = "UNKNOWN"
+    experimenter_text = visual.TextStim(win, "WARNING: No participant id found in latest video %s.\n\nPress 'q' or 'Esc' and check in folder %s for video." % (video, video_folder), pos=(0, -0.2), height=0.02)
 
 
-# Initialize components for Routine "instructions"
+# Data file name stem = absolute path + name; later add .psyexp, .csv, .log, etc
+filename = _thisDir + os.sep + u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])
+
+# save a log file for detail verbose info
+logFile = logging.LogFile(filename+'.log', level=logging.EXP)
+logging.console.setLevel(logging.WARNING)  # this outputs to the screen, not a file
+
+
+
 instructions_text = visual.TextStim(win=win, name='instructions_text',
-    text='You will see a video of the test.\n\nUse the mouse to rate how positive or negative the speaker is feeling at this point in the video.\n\nClick a mouse button to start.',
+    text='You will see a video of yourself performing the stress test.\n\nYou will use the trackball to rate how stressed you were DURING the test, not how you are currently feeling while watching the video.\n\nPlease move the trackball now to practice.\n\nLet me know when when you\'re ready to watch your video and rate how you felt AT THAT TIME.',
     font='Arial',
-    pos=(0, 0), height=0.05, wrapWidth=None, ori=0, 
+    pos=(0, 0.15), height=0.04, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
 
 
-# Initialize components for Routine "iti"
 getready = visual.TextStim(win=win, name='getready',
     text='+',
     font='Arial',
@@ -95,51 +91,74 @@ getready = visual.TextStim(win=win, name='getready',
     depth=0.0);
 
 
-# Initialize components for Routine "trial"
 prompt_text = visual.TextStim(win=win, name='prompt_text',
-    text='How did this person feel while talking?',
+    text='How stressed were you feeling at this time?',
     font='Arial',
-    pos=(0, -.25), height=0.05, wrapWidth=None, ori=0, 
+    pos=(0, -.2), height=0.05, wrapWidth=None, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
 scale = visual.ImageStim(
     win=win, name='scale',
-    image='valence_scale_white.png', mask=None,
-    ori=0, pos=(0, -.4), size=None,
-    color=[1,1,1], colorSpace='rgb', opacity=1,
-    flipHoriz=False, flipVert=False,
-    texRes=128, interpolate=True, depth=-1.0)
+    image='scale_stressed.png',
+    pos=(0, -.37), size=(1.8, 0.24075),
+    opacity=1, interpolate=True)
 indicator = visual.Polygon(
     win=win, name='indicator',
     edges=100, size=(.025, .025),
-    ori=90, pos=(0, -0.355),
+    ori=90, pos=(0, -0.363),
     lineWidth=4, lineColor=[1,1,1], lineColorSpace='rgb',
     fillColor=[1,0,.2], fillColorSpace='rgb',
     opacity=1, depth=-4.0, interpolate=True)
 
-# Bind mouse
+# Mouse and indicator setup
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
+mouse.setVisible(False)
+mouse.getPos()
+left_bound = -0.85
+right_bound = 0.85
+oldx, oldy = indicator.pos
+indicator.pos = (0, oldy)
 
-# Initialize components for Routine "thanks"
 thanksClock = core.Clock()
 thanks_text = visual.TextStim(win=win, name='thanks_text',
-    text='Thank you for participating!',
+    text='Thank you for your participation!\n\nYou have finished the task. Please retrieve the experimenter from the hallway.',
     font='Arial',
-    pos=(0, 0), height=0.1, wrapWidth=None, ori=0, 
+    pos=(0, 0), height=0.08, ori=0, 
     color='white', colorSpace='rgb', opacity=1, 
     languageStyle='LTR',
     depth=0.0);
 
 
-
-# Create some handy timers
-globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.CountdownTimer()  # to track time remaining of each (non-slip) routine 
 
-def displayText(text, timeLimit=0, mouseClickNext=False):
+
+def moveIndicator():
+    x, y = mouse.getPos()
+    oldx, oldy = indicator.pos
+    newx = x
+    constrainMouse = False
+
+    # constrain mouse position so that user can't move to the other screen accidentally
+    if newx < left_bound:
+        newx = left_bound
+        constrainMouse = True
+    if newx > right_bound:
+        newx = right_bound
+        constrainMouse = True
+    if abs(y - oldy) > 0.1:
+        constrainMouse = True
+    if constrainMouse:
+        mouse.setPos([newx, oldy])
+
+    indicator.pos = (newx, oldy)
+    indicator.draw()
+    return newx
+
+
+def displayText(text, timeLimit=0, mouseClickNext=False, showScale=False):
     t = 0
     continueRoutine = True
 
@@ -161,7 +180,11 @@ def displayText(text, timeLimit=0, mouseClickNext=False):
     # -------Start display-------
     while continueRoutine and (not timeLimit or (timeLimit and routineTimer.getTime() > 0)):
         # update/draw components on each frame
-        
+        if showScale:
+            scale.draw()
+            moveIndicator()
+            indicator.draw()
+
         if t >= 0.0 and text.status == NOT_STARTED:
             text.setAutoDraw(True)
         
@@ -197,7 +220,7 @@ def displayText(text, timeLimit=0, mouseClickNext=False):
             if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
                 continueRoutine = True
                 break  # at least one component has not yet finished
-        
+
         # refresh the screen
         if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
             win.flip()
@@ -232,84 +255,68 @@ while continueRoutine:
             continueRoutine = False
 
 mov.pause()
-# Reload the movie from the start
-mov.seek(0)
-
-mouse.setVisible(False)
 
 
-# ------Prepare to start Routine "instructions"-------
-displayText(instructions_text, mouseClickNext=True)
+# INSTRUCTIONS
+displayText(instructions_text, mouseClickNext=False, showScale=True)
 
 
-# ------Prepare to start Routine "iti"-------
-displayText(getready, 2.0)
-
-
-# ------Prepare to start Routine "trial"-------
-trialClock = core.Clock()
-newtime = trialClock.getTime()
-oldtime = newtime
 rate = 0.005
 
-shouldflip = mov.play()
-mouse.getPos()
-
 oldx, oldy = indicator.pos
-width = 0.025
-left_bound = -0.32
-right_bound = 0.32
 indicator.pos = (0, oldy)
+
+trialClock = core.Clock()
+oldtime = 0.0
+
+# Jump into the movie
+mov.seek(0)
+# Yes, this is ugly, but force the vlc clock to reset
+mov._vlc_clock.reset()
+shouldflip = mov.play()
 continueRoutine = True
-constrainMouse = False
-while mov.status != visual.FINISHED and continueRoutine:
-    x, y = mouse.getPos()
-    oldx, oldy = indicator.pos
-    newx = x
 
-    # constrain mouse position so that user can't move to the other screen accidentally
-    if newx < left_bound:
-        newx = left_bound
-        constrainMouse = True
-    if newx > right_bound:
-        newx = right_bound
-        constrainMouse = True
-    if abs(y - oldy) > 0.2:
-        constrainMouse = True
-    if constrainMouse:
-        mouse.setPos([newx, oldy])
+with open(filename+'.tsv', 'w', newline='') as csvfile:
+    output = csv.writer(csvfile, delimiter="\t")
+    output.writerow(['id', 'clock', 'vlc_time', 'frame_number', 'mouse'])
 
-    indicator.pos = (newx, oldy)
+    # MAIN TRIAL
+    while mov.status != visual.FINISHED and continueRoutine:
+        newx = moveIndicator()
 
-    newtime = trialClock.getTime()
-    if newtime - oldtime >= rate:
-        # Save mouse position data
-        exp.addData('clock', newtime)
-        exp.addData('frame', mov.getCurrentFrameNumber())
-        # Regularize to -1.0, 1.0
-        exp.addData('mouse', newx / right_bound)
-        exp.nextEntry()
-    oldtime = newtime
+        newtime = trialClock.getTime()
+        if newtime - oldtime >= rate:
+            # Save mouse position data
+            output.writerow(
+                [expInfo['participant'],
+                newtime,
+                mov.getCurrentFrameTime(),
+                mov.getCurrentFrameNumber(),
+                newx / right_bound # Regularize to -1.0, 1.0
+                ])
+        oldtime = newtime
 
-    # Only flip when a new frame should be displayed.
-    if shouldflip:
-        # Movie has already been drawn, so just draw text stim and flip
-        prompt_text.draw()
-        scale.draw()
-        indicator.draw()
-        win.flip()
-    else:
-        # Give the OS a break if a flip is not needed
-        time.sleep(0.001)
-    shouldflip = mov.draw()
+        # Only flip when a new frame should be displayed.
+        if shouldflip:
+            # Movie has already been drawn, so just draw text stim and flip
+            scale.draw()
+            prompt_text.draw()
+            indicator.draw()
+            win.flip()
+        else:
+            # Give the OS a break if a flip is not needed
+            time.sleep(0.001)
+        shouldflip = mov.draw()
 
-    for key in event.getKeys():
-        if key in ['escape', 'q']:
-            win.close()
-            core.quit()
+        for key in event.getKeys():
+            if key in ['escape', 'q']:
+                continueRoutine = False
+
+
+mov.pause()
 
 # ------Prepare to start Routine "thanks"-------
-displayText(thanks_text, mouseClickNext=True)
+displayText(thanks_text, mouseClickNext=False)
 
 logging.flush()
 
